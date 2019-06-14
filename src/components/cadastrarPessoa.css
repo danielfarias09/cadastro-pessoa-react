@@ -1,0 +1,12 @@
+.pessoaForm {
+    padding: 10px;
+}
+
+.row-telefone {
+    height: 32px;
+    border: 1px solid gray;
+}
+
+.btn-telefone {
+    margin-top: 30px;
+}
