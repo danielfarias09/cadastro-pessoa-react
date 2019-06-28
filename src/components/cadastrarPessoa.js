@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import '../components/cadastrarPessoa.css'
-import Pessoas from './pessoas';
+import Pessoa from './pessoa';
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
@@ -18,14 +18,6 @@ class CadastrarPessoa extends Component {
             pessoas: [],
             telefones: []
         }
-        /*this.handleNomeChange = this.handleNomeChange.bind(this)
-        this.handleCpfChange = this.handleCpfChange.bind(this)
-        this.handleEmailChange = this.handleEmailChange.bind(this)
-        this.handleDtNascimentoChange = this.handleDtNascimentoChange.bind(this)
-        this.handleDddChange = this.handleDddChange.bind(this)
-        this.handleNumeroChange = this.handleNumeroChange.bind(this)
-        this.handleSubmit = this.handleSubmit.bind(this)*/
-        //this.addTelefone = this.addTelefone.bind(this)
     }
 
     handleNomeChange = (event) => {
@@ -53,11 +45,9 @@ class CadastrarPessoa extends Component {
     }
 
     addTelefone = (event) => {
-        //event.preventDefault();
         var telefone = {'ddd': this.state.ddd , 'numero': this.state.numero};
         this.setState(state => {
-            const telefones = [...state.telefones, telefone];
-            
+            const telefones = [...state.telefones, telefone];          
             return {
                 ddd: '',
                 numero: '',
@@ -68,18 +58,44 @@ class CadastrarPessoa extends Component {
     }
 
     removerTelefone = (index) => {
-        //event.preventDefault();
         //O método filter() cria um novo array com todos os elementos que passam no teste implementado pela função
         this.setState({
             telefones: this.state.telefones.filter((x,i) => i != index )
           });
     }
 
-    componentDidMount = () => {
-        this.loadPesoas();
+    removerPessoa = (idPessoa, index) => {
+        fetch('http://localhost:8080/pessoas/' + idPessoa, {
+           method: 'DELETE',
+           headers: { 'Content-Type': 'application/json' },
+       }).then((res) => res.json())
+       .then((data) => {
+            this.setState({
+                pessoas: this.state.pessoas.filter((x,i) => i != index )
+            });
+       })
+       .catch((err)=>console.log(err))
     }
 
-    loadPesoas () {
+    editarPessoa = (idPessoa) => {
+        fetch('http://localhost:8080/pessoas/' + idPessoa)
+        .then(res => res.json())
+        .then((data => {
+            this.setState({
+                nome: data.nome,
+                cpf: data.cpf,
+                email: data.email,
+                dataNascimento: new Date(data.dataNascimento),
+                telefones: data.telefones
+            });
+        })).catch(console.log)
+    }
+
+    componentDidMount = () => {
+        this.loadPessoas();
+    }
+
+    loadPessoas () {
         fetch('http://localhost:8080/pessoas')
         .then(res => res.json())
         .then((data => {
@@ -94,9 +110,12 @@ class CadastrarPessoa extends Component {
            body: JSON.stringify(this.state)
        }).then((res) => res.json())
        .then((data) => {
-        console.log(data)
-        //event.preventDefault();
-        this.loadPesoas();
+        this.setState({
+            nome: '',
+            cpf: '',
+            email: '',
+            dataNascimento: ''})
+        this.loadPessoas();
        })
        .catch((err)=>console.log(err))
     }
@@ -137,19 +156,34 @@ class CadastrarPessoa extends Component {
                         </div>
                     </div>
 
-                    <div className="form-row list-telefone">
+                    <table className="table">
+                        <tbody>                                                
                             { this.state.telefones.map((telefone, index) => (
-                                <div className="row-telefone col-md-9 text-muted">
-                                    ({telefone.ddd}) {telefone.numero} <button className="btn btn-danger btn-sm float-right" onClick={this.removerTelefone.bind(this, index)}><FontAwesomeIcon icon={faTrash} /></button>
-                                </div>
-                            ))}
-                    </div>
-
+                                <tr className="form-row"> 
+                                    <th className="form-group col-md-7">
+                                        ({telefone.ddd}) {telefone.numero} 
+                                    </th>
+                                    <th className="form-group col-md-1">
+                                        <button className="btn btn-danger btn-sm float-right" onClick={this.removerTelefone.bind(this, index)}><FontAwesomeIcon icon={faTrash} /></button>
+                                    </th>
+                                </tr>
+                            ))}                                           
+                        </tbody>
+                    </table>
+                           
                     <button className="btn btn-success" onClick={this.handleSubmit}>Salvar</button>
                 </div>
 
                 <div className="col-md-6">
-                    <Pessoas pessoas = {this.state.pessoas} />
+                    <React.Fragment>
+                        <table className="table table-hover table-pessoa">
+                            <tbody>
+                                { this.state.pessoas.map((pessoa, index) => (
+                                    <Pessoa key={pessoa.id} pessoa={pessoa} removerPessoa={this.removerPessoa} editarPessoa={this.editarPessoa} id={pessoa.id} index={index} />            
+                                ))}
+                            </tbody>
+                        </table>
+                    </React.Fragment>               
                 </div>
             </div>
         );

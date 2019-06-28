@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import './App.css';
-import Pessoas from './components/pessoas';
 import CadastrarPessoa from './components/cadastrarPessoa';
 
 class App extends Component {
