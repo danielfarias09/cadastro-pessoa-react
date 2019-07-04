@@ -2,7 +2,9 @@ import React, { Component } from 'react';
 import '../components/cadastrarPessoa.css'
 import Pessoa from './pessoa';
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import moment from 'moment'
+import { getPessoas, deletePessoa, getPessoa, savePessoa, updatePessoa } from '../services/pessoaService'
 
 class CadastrarPessoa extends Component {
 
@@ -65,30 +67,27 @@ class CadastrarPessoa extends Component {
     }
 
     removerPessoa = (idPessoa, index) => {
-        fetch('http://localhost:8080/pessoas/' + idPessoa, {
-           method: 'DELETE',
-           headers: { 'Content-Type': 'application/json' },
-       }).then((res) => res.json())
-       .then((data) => {
-            this.setState({
-                pessoas: this.state.pessoas.filter((x,i) => i != index )
-            });
-       })
-       .catch((err)=>console.log(err))
+        deletePessoa(idPessoa)
+        .then((response) => {
+                this.setState({
+                    pessoas: this.state.pessoas.filter((x,i) => i != index )
+                });
+        })
+        .catch(console.log);
     }
 
     editarPessoa = (idPessoa) => {
-        fetch('http://localhost:8080/pessoas/' + idPessoa)
-        .then(res => res.json())
-        .then((data => {
+        getPessoa(idPessoa)
+        .then((response => {
             this.setState({
-                nome: data.nome,
-                cpf: data.cpf,
-                email: data.email,
-                dataNascimento: new Date(data.dataNascimento),
-                telefones: data.telefones
+                id: response.id,
+                nome: response.nome,
+                cpf: response.cpf,
+                email: response.email,
+                dataNascimento: moment(response.dataNascimento).format("YYYY-MM-DD"),
+                telefones: response.telefones
             });
-        })).catch(console.log)
+        })).catch(console.log);
     }
 
     componentDidMount = () => {
@@ -96,28 +95,24 @@ class CadastrarPessoa extends Component {
     }
 
     loadPessoas () {
-        fetch('http://localhost:8080/pessoas')
-        .then(res => res.json())
-        .then((data => {
-            this.setState({pessoas: data});
-        })).catch(console.log)
+       getPessoas()
+       .then(response => this.setState({pessoas: response}))
+       .catch(console.error);
     }
 
     handleSubmit = () => {
-       fetch('http://localhost:8080/pessoas', {
-           method: 'POST',
-           headers: { 'Content-Type': 'application/json' },
-           body: JSON.stringify(this.state)
-       }).then((res) => res.json())
-       .then((data) => {
-        this.setState({
-            nome: '',
-            cpf: '',
-            email: '',
-            dataNascimento: ''})
-        this.loadPessoas();
-       })
-       .catch((err)=>console.log(err))
+            savePessoa(this.state)
+            .then((response) => {
+                    this.setState({
+                        nome: '',
+                        cpf: '',
+                        email: '',
+                        dataNascimento: '',
+                        telefones: []
+                })
+            this.loadPessoas();
+            }).catch(console.error);
+
     }
 
     render() {
